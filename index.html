@@ -37,20 +37,25 @@
     const ctx = canvas.getContext('2d')
 
     // game
+    let gameIsRunning = true;
+
     const fps = 10;
-    const snakeSize = 30;
-    const tileCountX = canvas.width / snakeSize;
-    const tileCountY = canvas.height / snakeSize;
+    const tileSize = 30;
+    const tileCountX = canvas.width / tileSize;
+    const tileCountY = canvas.height / tileSize;
 
     let score = 0;
 
     // player
-    let snakeSpeed = snakeSize;
+    let snakeSpeed = tileSize;
     let snakePosX = 0;
     let snakePosY = canvas.height / 2;
 
     let velocityX = 0; // 1 - game starts with snake moving right
     let velocityY = 0;
+
+    let tail = []
+    let snakeLength = 1;
 
     // food
     let foodPosX = 400;
@@ -73,22 +78,36 @@
         snakePosY += snakeSpeed * velocityY;
 
         // wall collisions
-        if (snakePosX > (canvas.width - snakeSize)) {
+        if (snakePosX > (canvas.width - tileSize)) {
             snakePosX = 0;
         }
         if (snakePosX < 0) {
             snakePosX = canvas.width;
         }
-        if (snakePosY > (canvas.height - snakeSize)) {
+        if (snakePosY > (canvas.height - tileSize)) {
             snakePosY = 0;
         }
         if (snakePosY < 0) {
             snakePosY = canvas.height;
         }
 
+        // tail
+        tail.push({x: snakePosX, y: snakePosY});
+
+        // forget the earliest parts of snake
+        tail = tail.slice(-1 * snakeLength);
+
+        // tail collisions (game over)
+        tail.forEach((snakePart) => {
+            if (snakePosX === snakePart.x && snakePosY === snakePart.y) {
+                alert('CRASH!');
+            }
+        });
+
         // food collisions
         if (snakePosX === foodPosX && snakePosY === foodPosY) {
             title.textContent = ++score;
+            snakeLength++;
             resetFood()
         }
     }
@@ -102,10 +121,14 @@
         drawGrid()
 
         // food
-        rectangle('blue', foodPosX, foodPosY, snakeSize, snakeSize)
+        rectangle('blue', foodPosX, foodPosY, tileSize, tileSize)
+
+        // tail
+        tail.forEach((snakePart) =>
+            rectangle('grey', snakePart.x, snakePart.y, tileSize, tileSize))
 
         // snake
-        rectangle('black', snakePosX, snakePosY, snakeSize, snakeSize)
+        rectangle('black', snakePosX, snakePosY, tileSize, tileSize)
     }
 
     function rectangle(color, x, y, width, height) {
@@ -145,8 +168,8 @@
 
     // randomize food position
     function resetFood() {
-        foodPosX = Math.floor(Math.random() * tileCountX) * snakeSize;
-        foodPosY = Math.floor(Math.random() * tileCountY) * snakeSize;
+        foodPosX = Math.floor(Math.random() * tileCountX) * tileSize;
+        foodPosY = Math.floor(Math.random() * tileCountY) * tileSize;
     }
 
     // grid
@@ -155,10 +178,10 @@
             for (let j = 0; j < tileCountY; j++) {
                 rectangle(
                     '#fff',
-                    snakeSize * i,
-                    snakeSize * j,
-                    snakeSize - 1,
-                    snakeSize - 1)
+                    tileSize * i,
+                    tileSize * j,
+                    tileSize - 1,
+                    tileSize - 1)
             }
         }
     }
